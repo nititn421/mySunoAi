@@ -1,59 +1,105 @@
-import gradio as gr
-
+import streamlit as st
 from voice import create_poetry_audio
 
 
-# =========================================================
-# GENERATE POETRY
-# =========================================================
+st.set_page_config(
+    page_title="MySunoAI Poetry Studio",
+    page_icon="🎵",
+    layout="centered"
+)
 
-def generate_poetry(
-
-    lyrics,
-
-    mood,
-
-    voice_tone,
-
-    music_name,
-
-    voice_file
-
-):
+st.title("🎵 MySunoAI Poetry Studio")
+st.markdown("### 🎤 अपनी आवाज़ में Poetry बनाइए")
 
 
-    if not voice_file:
-
-        return (
-
-            "❌ Please upload your voice recording.",
-
-            None,
-
-            None
-
-        )
+# Poetry
+lyrics = st.text_area(
+    "✍️ Your Poetry",
+    placeholder="यहाँ अपनी कविता लिखें...",
+    height=200
+)
 
 
-    if not lyrics:
+# Mood
+mood = st.selectbox(
+    "😊 Poetry Mood",
+    [
+        "Emotional",
+        "Sad",
+        "Romantic",
+        "Deep",
+        "Calm",
+        "Motivational",
+        "Spiritual"
+    ]
+)
 
-        lyrics = (
 
-            "Voice recording uploaded"
+# Voice Tone
+voice_tone = st.selectbox(
+    "🎙️ Voice Tone",
+    [
+        "Emotional",
+        "Deep",
+        "Soft",
+        "Warm",
+        "Clear"
+    ]
+)
 
-        )
+
+# Music
+music_choices = [
+    "background1.mp3",
+    "background2.mp3",
+    "background3.mp3",
+    "background4.mp3",
+    "background5.mp3",
+    "background6.mp3",
+    "background7.mp3",
+    "background8.mp3",
+    "background9.mp3",
+    "background10.mp3",
+    "background11.mp3",
+    "background12.mp3"
+]
+
+music_name = st.selectbox(
+    "🎵 Select Background Music",
+    music_choices
+)
 
 
-    try:
+# Voice upload
+voice_file = st.file_uploader(
+    "🎤 Upload Your Poetry Voice",
+    type=["wav", "mp3", "m4a", "ogg"]
+)
 
 
-        # Create final audio
+# Generate
+if st.button("🎵 Generate Poetry", type="primary"):
 
-        processed_voice, final_audio = (
+    if voice_file is None:
 
-            create_poetry_audio(
+        st.error("❌ Please upload your voice recording.")
 
-                voice_file=voice_file,
+    else:
+
+        try:
+
+            # Save uploaded voice temporarily
+            input_voice = "uploaded_voice.wav"
+
+            with open(input_voice, "wb") as f:
+                f.write(voice_file.getbuffer())
+
+
+            st.info("🎵 Processing your voice... Please wait.")
+
+            processed_voice, final_audio = create_poetry_audio(
+
+                voice_file=input_voice,
 
                 music_name=music_name,
 
@@ -63,347 +109,56 @@ def generate_poetry(
 
             )
 
-        )
 
+            st.success(
+                "✅ Poetry Audio Generated Successfully!"
+            )
 
-        details = f"""
-🎵 MySunoAI Poetry Studio
 
-✅ Poetry Audio Generated Successfully
+            st.write("### 📄 Processing Details")
 
-😊 Mood:
-{mood}
+            st.write(
+                f"""
+                😊 Mood: {mood}
 
-🎙️ Voice Tone:
-{voice_tone}
+                🎙️ Voice Tone: {voice_tone}
 
-🎵 Background Music:
-{music_name}
+                🎵 Background Music: {music_name}
 
-🎤 Voice:
-Your Uploaded Voice
+                🎤 Voice: Your Uploaded Voice
 
-🎧 Processing:
-Voice Enhancement + Automatic Music Mixing
+                🎧 Processing: Voice Enhancement + Automatic Music Mixing
+                """
+            )
 
-🎬 Intro:
-3 Seconds
 
-🎬 Outro:
-3 Seconds
+            st.write("### 🎙️ Processed Voice")
 
-📁 Final Audio:
-Generated Successfully
-"""
+            st.audio(
+                processed_voice
+            )
 
 
-        return (
+            st.write("### 🎧 Final Poetry With Music")
 
-            details,
+            st.audio(
+                final_audio
+            )
 
-            processed_voice,
 
-            final_audio
+            # Download button
+            with open(final_audio, "rb") as f:
 
-        )
+                st.download_button(
+                    label="⬇️ Download Final Poetry",
+                    data=f,
+                    file_name="MySunoAI_Poetry.mp3",
+                    mime="audio/mpeg"
+                )
 
 
-    except Exception as e:
+        except Exception as e:
 
-
-        error_message = f"""
-❌ ERROR
-
-{str(e)}
-
-Please check the terminal for details.
-"""
-
-
-        print(
-            error_message
-        )
-
-
-        return (
-
-            error_message,
-
-            None,
-
-            None
-
-        )
-
-
-# =========================================================
-# MUSIC LIST
-# =========================================================
-
-music_choices = [
-
-    "background1.mp3",
-
-    "background2.mp3",
-
-    "background3.mp3",
-
-    "background4.mp3",
-
-    "background5.mp3",
-
-    "background6.mp3",
-
-    "background7.mp3",
-
-    "background8.mp3",
-
-    "background9.mp3",
-
-    "background10.mp3",
-
-    "background11.mp3",
-
-    "background12.mp3",
-
-]
-
-
-# =========================================================
-# GRADIO APP
-# =========================================================
-
-with gr.Blocks(
-
-    title="MySunoAI Poetry Studio"
-
-) as demo:
-
-
-    gr.Markdown(
-
-        "# 🎵 MySunoAI Poetry Studio"
-
-    )
-
-
-    gr.Markdown(
-
-        "### 🎤 अपनी आवाज़ में Poetry बनाइए"
-
-    )
-
-
-    # =====================================================
-    # POETRY
-    # =====================================================
-
-    lyrics = gr.Textbox(
-
-        lines=10,
-
-        label="✍️ Your Poetry",
-
-        placeholder=(
-
-            "यहाँ अपनी कविता लिखें..."
-
-        )
-
-    )
-
-
-    # =====================================================
-    # MOOD
-    # =====================================================
-
-    mood = gr.Dropdown(
-
-        [
-        "Emotional",
-        "Sad",
-        "Romantic",
-        "Deep",
-        "Calm",
-        "Motivational",
-        "Spiritual"
-    ],
-    value="Emotional",
-    label="😊 Poetry Mood"
-
-    )
-
-
-    # =====================================================
-    # VOICE TONE
-    # =====================================================
-
-    voice_tone = gr.Dropdown(
-
-        [
-
-            "Emotional",
-
-            "Deep",
-
-            "Soft",
-
-            "Warm",
-
-            "Clear"
-
-        ],
-
-        value="Emotional",
-
-        label="🎙️ Voice Tone"
-
-    )
-
-
-    # =====================================================
-    # MUSIC
-    # =====================================================
-
-    music_name = gr.Dropdown(
-
-        choices=music_choices,
-
-        value="background1.mp3",
-
-        label="🎵 Select Background Music"
-
-    )
-
-
-    # =====================================================
-    # VOICE UPLOAD
-    # =====================================================
-
-    voice_file = gr.Audio(
-
-        sources=[
-
-            "upload",
-
-            "microphone"
-
-        ],
-
-        type="filepath",
-
-        label=(
-
-            "🎤 Upload Your Poetry Voice"
-
-        )
-
-    )
-
-
-    # =====================================================
-    # GENERATE BUTTON
-    # =====================================================
-
-    generate_button = gr.Button(
-
-        "🎵 Generate Poetry",
-
-        variant="primary"
-
-    )
-
-
-    # =====================================================
-    # DETAILS
-    # =====================================================
-
-    details = gr.Textbox(
-
-        label="📄 Processing Details",
-
-        lines=10
-
-    )
-
-
-    # =====================================================
-    # PROCESSED VOICE
-    # =====================================================
-
-    processed_voice = gr.Audio(
-
-        type="filepath",
-
-        label=(
-
-            "🎙️ Processed Voice"
-
-        )
-
-    )
-
-
-    # =====================================================
-    # FINAL AUDIO
-    # =====================================================
-
-    final_audio = gr.Audio(
-
-        type="filepath",
-
-        label=(
-
-            "🎧 Final Poetry With Music"
-
-        )
-
-    )
-
-
-    # =====================================================
-    # BUTTON ACTION
-    # =====================================================
-
-    generate_button.click(
-
-        fn=generate_poetry,
-
-        inputs=[
-
-            lyrics,
-
-            mood,
-
-            voice_tone,
-
-            music_name,
-
-            voice_file
-
-        ],
-
-        outputs=[
-
-            details,
-
-            processed_voice,
-
-            final_audio
-
-        ]
-
-    )
-
-
-# =========================================================
-# LAUNCH APP
-# =========================================================
-
-if __name__ == "__main__":
-
-    demo.launch(
-
-        share=True
-
-    )
+            st.error(
+                f"❌ ERROR: {str(e)}"
+            )
