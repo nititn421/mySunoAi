@@ -1,2 +1,3 @@
 gradio
 pyoub
+edge-tts
