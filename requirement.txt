@@ -1,4 +1,4 @@
 streamlit
 gradio
 pydub
-edeg-tts
+edge-tts
