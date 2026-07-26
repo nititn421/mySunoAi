@@ -1,7 +1,10 @@
 from pathlib import Path
 
 from pydub import AudioSegment
-from pydub.effects import normalize, compress_dynamic_range
+from pydub.effects import (
+    normalize,
+    compress_dynamic_range
+)
 
 
 # =========================================================
@@ -16,22 +19,12 @@ MUSIC_DIR.mkdir(exist_ok=True)
 
 
 # =========================================================
-# MUSIC FILES
+# MUSIC
 # =========================================================
 
 MUSIC_FILES = [
-    "background1.mp3",
-    "background2.mp3",
-    "background3.mp3",
-    "background4.mp3",
-    "background5.mp3",
-    "background6.mp3",
-    "background7.mp3",
-    "background8.mp3",
-    "background9.mp3",
-    "background10.mp3",
-    "background11.mp3",
-    "background12.mp3",
+    f"background{i}.mp3"
+    for i in range(1, 13)
 ]
 
 
@@ -55,22 +48,22 @@ def select_music(music_name):
 
 
 # =========================================================
-# CHANGE SPEED
+# SPEED
 # =========================================================
 
-def change_speed(audio, speed=1.0):
+def change_speed(audio, speed):
 
     if speed == 1.0:
         return audio
 
-    new_frame_rate = int(
+    new_rate = int(
         audio.frame_rate * speed
     )
 
     changed = audio._spawn(
         audio.raw_data,
         overrides={
-            "frame_rate": new_frame_rate
+            "frame_rate": new_rate
         }
     )
 
@@ -80,23 +73,26 @@ def change_speed(audio, speed=1.0):
 
 
 # =========================================================
-# SIMPLE PITCH CHANGE
+# PITCH
 # =========================================================
 
-def change_pitch(audio, pitch=0):
+def change_pitch(audio, pitch):
 
     if pitch == 0:
         return audio
 
-    new_frame_rate = int(
-        audio.frame_rate *
-        (2.0 ** (pitch / 12.0))
+    factor = 2 ** (
+        pitch / 12.0
+    )
+
+    new_rate = int(
+        audio.frame_rate * factor
     )
 
     changed = audio._spawn(
         audio.raw_data,
         overrides={
-            "frame_rate": new_frame_rate
+            "frame_rate": new_rate
         }
     )
 
@@ -106,104 +102,76 @@ def change_pitch(audio, pitch=0):
 
 
 # =========================================================
-# SIMPLE REVERB
+# REVERB
 # =========================================================
 
-def add_reverb(audio, reverb_level=10):
+def add_reverb(audio, amount):
 
-    if reverb_level <= 0:
+    if amount <= 0:
         return audio
 
     delay = int(
-        40 + (reverb_level * 3)
+        80 + amount * 4
     )
 
-    echo = AudioSegment.silent(
-        duration=delay
-    ) + (
-        audio - 12
+    echo = (
+        AudioSegment.silent(
+            duration=delay
+        )
+        + (audio - 18)
     )
 
-    reverb = audio.overlay(
-        echo
-    )
+    echo = echo[:len(audio)]
 
-    return reverb
+    return audio.overlay(
+        echo,
+        position=delay
+    )
 
 
 # =========================================================
-# PROCESS VOICE
+# VOICE ENHANCEMENT
 # =========================================================
 
-def process_voice(
-    voice_file,
-    voice_tone="Emotional",
-    pitch=0,
-    speed=1.0,
-    bass=0,
-    treble=0,
-    reverb=10
+def enhance_voice(
+    voice,
+    preset,
+    pitch,
+    speed,
+    bass,
+    treble,
+    reverb
 ):
 
-    if not voice_file:
-        raise ValueError(
-            "Please upload your voice recording."
-        )
-
-    print(
-        "🎤 Processing Voice..."
-    )
-
-    # Load voice
-    voice = AudioSegment.from_file(
-        voice_file
-    )
-
-    # Convert to mono
-    voice = voice.set_channels(
-        1
-    )
-
-    # Normalize
-    voice = normalize(
-        voice,
-        headroom=1.0
-    )
-
-    # Compression
-    voice = compress_dynamic_range(
-        voice,
-        threshold=-20.0,
-        ratio=2.5,
-        attack=5,
-        release=80
-    )
-
     # =====================================================
-    # VOICE TONE
+    # MONO
     # =====================================================
 
-    if voice_tone == "Deep":
+    voice = voice.set_channels(1)
 
-        voice = voice.low_pass_filter(
-            8500
-        )
+
+    # =====================================================
+    # NOISE REDUCTION - BASIC
+    # =====================================================
+
+    # Remove very low rumble
+    voice = voice.high_pass_filter(
+        70
+    )
+
+
+    # =====================================================
+    # PRESET
+    # =====================================================
+
+    if preset == "Natural":
 
         voice = voice.apply_gain(
-            1
+            0
         )
 
-    elif voice_tone == "Soft":
 
-        voice = voice.low_pass_filter(
-            7500
-        )
-
-        voice = voice.apply_gain(
-            -1
-        )
-
-    elif voice_tone == "Warm":
+    elif preset == "Warm":
 
         voice = voice.low_pass_filter(
             9000
@@ -213,21 +181,55 @@ def process_voice(
             1
         )
 
-    elif voice_tone == "Clear":
 
-        voice = voice.high_pass_filter(
-            80
+    elif preset == "Deep":
+
+        voice = voice.low_pass_filter(
+            7500
         )
 
         voice = voice.apply_gain(
             1
         )
 
-    elif voice_tone == "Emotional":
+
+    elif preset == "Studio":
+
+        voice = voice.high_pass_filter(
+            80
+        )
+
+        voice = compress_dynamic_range(
+            voice,
+            threshold=-22,
+            ratio=3.0,
+            attack=5,
+            release=100
+        )
+
+        voice = voice.apply_gain(
+            1
+        )
+
+
+    elif preset == "Cinematic":
 
         voice = voice.high_pass_filter(
             70
         )
+
+        voice = compress_dynamic_range(
+            voice,
+            threshold=-22,
+            ratio=2.5,
+            attack=5,
+            release=120
+        )
+
+        voice = voice.apply_gain(
+            1
+        )
+
 
     # =====================================================
     # BASS
@@ -235,27 +237,37 @@ def process_voice(
 
     if bass != 0:
 
-        voice = voice.low_pass_filter(
-            12000
+        bass_layer = voice.low_pass_filter(
+            250
         )
 
-        voice = voice.apply_gain(
-            bass * 0.5
+        bass_layer = bass_layer.apply_gain(
+            bass
         )
+
+        voice = voice.overlay(
+            bass_layer
+        )
+
 
     # =====================================================
-    # TREBLE
+    # TREBLE / CLARITY
     # =====================================================
 
     if treble != 0:
 
-        voice = voice.high_pass_filter(
-            100
+        treble_layer = voice.high_pass_filter(
+            3000
         )
 
-        voice = voice.apply_gain(
-            treble * 0.3
+        treble_layer = treble_layer.apply_gain(
+            treble
         )
+
+        voice = voice.overlay(
+            treble_layer
+        )
+
 
     # =====================================================
     # PITCH
@@ -266,6 +278,7 @@ def process_voice(
         pitch
     )
 
+
     # =====================================================
     # SPEED
     # =====================================================
@@ -274,6 +287,7 @@ def process_voice(
         voice,
         speed
     )
+
 
     # =====================================================
     # REVERB
@@ -284,30 +298,95 @@ def process_voice(
         reverb
     )
 
-    # Final normalize
+
+    # =====================================================
+    # FINAL COMPRESSION
+    # =====================================================
+
+    voice = compress_dynamic_range(
+        voice,
+        threshold=-20,
+        ratio=2.5,
+        attack=5,
+        release=100
+    )
+
+
+    # =====================================================
+    # NORMALIZE
+    # =====================================================
+
     voice = normalize(
         voice,
         headroom=1.0
     )
 
-    # Save
-    processed_voice_path = (
+
+    return voice
+
+
+# =========================================================
+# PROCESS VOICE
+# =========================================================
+
+def process_voice(
+    voice_file,
+    preset,
+    pitch,
+    speed,
+    bass,
+    treble,
+    reverb
+):
+
+    if not voice_file:
+
+        raise ValueError(
+            "Please upload your voice recording."
+        )
+
+
+    print(
+        "🎤 Processing Voice..."
+    )
+
+
+    voice = AudioSegment.from_file(
+        voice_file
+    )
+
+
+    voice = enhance_voice(
+        voice=voice,
+        preset=preset,
+        pitch=pitch,
+        speed=speed,
+        bass=bass,
+        treble=treble,
+        reverb=reverb
+    )
+
+
+    processed_path = (
         OUTPUT_DIR /
         "processed_voice.wav"
     )
 
+
     voice.export(
-        processed_voice_path,
+        processed_path,
         format="wav"
     )
 
+
     print(
-        "✅ Voice Processing Completed"
+        "✅ Voice Enhancement Completed"
     )
+
 
     return (
         voice,
-        str(processed_voice_path)
+        str(processed_path)
     )
 
 
@@ -317,7 +396,7 @@ def process_voice(
 
 def loop_music(
     music,
-    required_length
+    duration
 ):
 
     if len(music) == 0:
@@ -326,75 +405,42 @@ def loop_music(
             "Background music is empty."
         )
 
-    while len(music) < required_length:
+
+    while len(music) < duration:
 
         music += music
 
+
     return music[
-        :required_length
+        :duration
     ]
 
 
 # =========================================================
-# AUTOMATIC MUSIC DUCKING
-# =========================================================
-
-def duck_music(
-    music,
-    voice,
-    music_volume=-26
-):
-
-    # Music volume during voice
-    music = music.apply_gain(
-        music_volume
-    )
-
-    # Create music bed
-    music_bed = AudioSegment.silent(
-        duration=len(voice)
-    )
-
-    # Add music
-    music_bed = music_bed.overlay(
-        music[:len(voice)]
-    )
-
-    # Voice starts normally
-    result = music_bed.overlay(
-        voice
-    )
-
-    return result
-
-
-# =========================================================
-# AUTOMATIC MIXING
+# AUTOMATIC MUSIC MIX
 # =========================================================
 
 def automatic_mix(
     voice,
-    music_path
+    music_path,
+    music_volume=-28
 ):
 
     print(
-        "🎵 Starting Automatic Music Sync..."
+        "🎵 Automatic Music Mixing..."
     )
 
-    # Load music
+
     music = AudioSegment.from_file(
         music_path
     )
 
-    # Convert music to stereo
-    music = music.set_channels(
-        2
-    )
 
-    # Convert voice to stereo
-    voice = voice.set_channels(
-        2
-    )
+    # Stereo
+    music = music.set_channels(2)
+
+    voice = voice.set_channels(2)
+
 
     # =====================================================
     # INTRO / OUTRO
@@ -403,17 +449,19 @@ def automatic_mix(
     intro_duration = 3000
     outro_duration = 4000
 
-    required_length = (
+
+    total_duration = (
         intro_duration
         + len(voice)
         + outro_duration
     )
 
-    # Loop music
+
     music = loop_music(
         music,
-        required_length
+        total_duration
     )
+
 
     # =====================================================
     # INTRO
@@ -432,8 +480,9 @@ def automatic_mix(
     )
 
     intro = intro.fade_out(
-        500
+        700
     )
+
 
     # =====================================================
     # MAIN MUSIC
@@ -444,18 +493,18 @@ def automatic_mix(
         intro_duration + len(voice)
     ]
 
-    # Music volume
+
+    # Music under voice
     main_music = main_music.apply_gain(
-        -27
+        music_volume
     )
 
-    # =====================================================
-    # MUSIC FADE IN
-    # =====================================================
 
+    # Smooth music start
     main_music = main_music.fade_in(
-        1000
+        800
     )
+
 
     # =====================================================
     # VOICE + MUSIC
@@ -464,6 +513,7 @@ def automatic_mix(
     main_mix = main_music.overlay(
         voice
     )
+
 
     # =====================================================
     # OUTRO
@@ -474,25 +524,30 @@ def automatic_mix(
         + len(voice)
     )
 
+
     outro = music[
         outro_start:
         outro_start + outro_duration
     ]
 
+
     outro = outro.apply_gain(
         -22
     )
+
 
     outro = outro.fade_in(
         500
     )
 
+
     outro = outro.fade_out(
         outro_duration
     )
 
+
     # =====================================================
-    # FINAL AUDIO
+    # FINAL
     # =====================================================
 
     final_audio = (
@@ -501,15 +556,17 @@ def automatic_mix(
         + outro
     )
 
-    # Final normalize
+
     final_audio = normalize(
         final_audio,
         headroom=1.0
     )
 
+
     print(
-        "✅ Automatic Music Sync Completed"
+        "✅ Music Mixing Completed"
     )
+
 
     return final_audio
 
@@ -522,115 +579,35 @@ def create_poetry_audio(
     voice_file,
     music_name,
     mood,
-    voice_tone,
+    preset="Studio",
     pitch=0,
     speed=1.0,
     bass=0,
     treble=0,
-    reverb=10
+    reverb=0,
+    music_volume=-28
 ):
-
-    print(
-        "\n=============================="
-    )
 
     print(
         "🎵 MySunoAI Processing Started"
     )
 
-    print(
-        f"😊 Mood: {mood}"
-    )
-
-    print(
-        f"🎙️ Voice Tone: {voice_tone}"
-    )
-
-    print(
-        f"🎚️ Pitch: {pitch}"
-    )
-
-    print(
-        f"⏩ Speed: {speed}x"
-    )
-
-    print(
-        f"🔊 Bass: {bass}"
-    )
-
-    print(
-        f"✨ Treble: {treble}"
-    )
-
-    print(
-        f"🌊 Reverb: {reverb}"
-    )
-
-    print(
-        "=============================="
-    )
 
     # =====================================================
-    # STEP 1
+    # VOICE
     # =====================================================
 
-    voice, processed_voice_path = (
-        process_voice(
-            voice_file=voice_file,
-            voice_tone=voice_tone,
-            pitch=pitch,
-            speed=speed,
-            bass=bass,
-            treble=treble,
-            reverb=reverb
-        )
+    voice, processed_path = process_voice(
+        voice_file=voice_file,
+        preset=preset,
+        pitch=pitch,
+        speed=speed,
+        bass=bass,
+        treble=treble,
+        reverb=reverb
     )
+
 
     # =====================================================
-    # STEP 2
+    # MUSIC
     # =====================================================
-
-    music_path = select_music(
-        music_name
-    )
-
-    # =====================================================
-    # STEP 3
-    # =====================================================
-
-    final_audio = automatic_mix(
-        voice,
-        music_path
-    )
-
-    # =====================================================
-    # STEP 4
-    # =====================================================
-
-    final_path = (
-        OUTPUT_DIR /
-        "final_output.mp3"
-    )
-
-    final_audio.export(
-        final_path,
-        format="mp3",
-        bitrate="192k"
-    )
-
-    print(
-        "🎧 Final Poetry Audio Generated"
-    )
-
-    print(
-        f"📁 Saved: {final_path}"
-    )
-
-    print(
-        "=============================="
-    )
-
-    return (
-        processed_voice_path,
-        str(final_path)
-    )
