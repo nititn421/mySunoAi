@@ -8,13 +8,9 @@ from voice import create_poetry_audio
 # =========================================================
 
 st.set_page_config(
-
     page_title="MySunoAI Poetry Studio",
-
     page_icon="🎵",
-
     layout="centered"
-
 )
 
 
@@ -23,7 +19,7 @@ st.title(
 )
 
 st.markdown(
-    "### 🎤 अपनी आवाज़ में Poetry बनाइए"
+    "### 🎤 अपनी आवाज़ में Professional Poetry बनाइए"
 )
 
 
@@ -32,13 +28,9 @@ st.markdown(
 # =========================================================
 
 lyrics = st.text_area(
-
     "✍️ Your Poetry",
-
     placeholder="यहाँ अपनी कविता लिखें...",
-
-    height=200
-
+    height=180
 )
 
 
@@ -47,142 +39,103 @@ lyrics = st.text_area(
 # =========================================================
 
 mood = st.selectbox(
-
     "😊 Poetry Mood",
-
     [
-
         "Emotional",
-
         "Sad",
-
         "Romantic",
-
         "Deep",
-
         "Calm",
-
         "Motivational",
-
         "Spiritual"
-
     ]
-
 )
 
 
 # =========================================================
-# VOICE TONE
+# VOICE PRESET
 # =========================================================
 
-voice_tone = st.selectbox(
-
-    "🎙️ Voice Tone",
-
+preset = st.selectbox(
+    "🎙️ Voice Enhancement Preset",
     [
-
-        "Emotional",
-
-        "Deep",
-
-        "Soft",
-
+        "Natural",
         "Warm",
-
-        "Clear"
-
-    ]
-
+        "Deep",
+        "Studio",
+        "Cinematic"
+    ],
+    index=3
 )
 
-
-# =========================================================
-# VOICE EFFECTS
-# =========================================================
 
 st.markdown(
-    "## 🎚️ Voice Effects"
+    "### 🎚️ Advanced Voice Controls"
 )
 
 
-# Pitch
+# =========================================================
+# PITCH
+# =========================================================
 
 pitch = st.slider(
-
-    "🎚️ Voice Pitch",
-
-    min_value=-5,
-
-    max_value=5,
-
-    value=0,
-
-    step=1,
-
-    help="Negative = मोटी आवाज़ | Positive = पतली आवाज़"
-
+    "🎚️ Pitch — मोटी ↔ पतली",
+    -5,
+    5,
+    0,
+    1
 )
 
 
-# Speed
+# =========================================================
+# SPEED
+# =========================================================
 
 speed = st.slider(
-
-    "🐢 Voice Speed",
-
-    min_value=0.5,
-
-    max_value=1.5,
-
-    value=1.0,
-
-    step=0.05
-
+    "⏩ Speed — Slow ↔ Fast",
+    0.7,
+    1.3,
+    1.0,
+    0.05
 )
 
 
-# Bass
+# =========================================================
+# BASS
+# =========================================================
 
 bass = st.slider(
-
     "🔊 Bass",
-
-    min_value=0,
-
-    max_value=10,
-
-    value=0
-
+    -5,
+    8,
+    0,
+    1
 )
 
 
-# Treble
+# =========================================================
+# TREBLE
+# =========================================================
 
 treble = st.slider(
-
-    "✨ Treble",
-
-    min_value=0,
-
-    max_value=10,
-
-    value=0
-
+    "✨ Treble / Clarity",
+    -5,
+    8,
+    0,
+    1
 )
 
 
-# Reverb
+# =========================================================
+# REVERB
+# =========================================================
 
 reverb = st.slider(
-
     "🌊 Reverb",
-
-    min_value=0,
-
-    max_value=20,
-
-    value=0
-
+    0,
+    30,
+    0,
+    1
 )
 
 
@@ -191,40 +144,27 @@ reverb = st.slider(
 # =========================================================
 
 music_choices = [
-
-    "background1.mp3",
-
-    "background2.mp3",
-
-    "background3.mp3",
-
-    "background4.mp3",
-
-    "background5.mp3",
-
-    "background6.mp3",
-
-    "background7.mp3",
-
-    "background8.mp3",
-
-    "background9.mp3",
-
-    "background10.mp3",
-
-    "background11.mp3",
-
-    "background12.mp3"
-
+    f"background{i}.mp3"
+    for i in range(1, 13)
 ]
 
 
 music_name = st.selectbox(
-
     "🎵 Select Background Music",
-
     music_choices
+)
 
+
+# =========================================================
+# MUSIC VOLUME
+# =========================================================
+
+music_volume = st.slider(
+    "🎵 Background Music Volume",
+    -35,
+    -15,
+    -28,
+    1
 )
 
 
@@ -233,21 +173,13 @@ music_name = st.selectbox(
 # =========================================================
 
 voice_file = st.file_uploader(
-
     "🎤 Upload Your Poetry Voice",
-
     type=[
-
         "wav",
-
         "mp3",
-
         "m4a",
-
         "ogg"
-
     ]
-
 )
 
 
@@ -256,93 +188,72 @@ voice_file = st.file_uploader(
 # =========================================================
 
 if st.button(
-
-    "🎵 Generate Poetry Remix",
-
+    "🎵 Generate Professional Poetry",
     type="primary"
-
 ):
-
 
     if voice_file is None:
 
         st.error(
-
             "❌ Please upload your voice recording."
-
         )
 
 
     else:
 
-
         try:
 
-
-            # Temporary file
+            # Save upload
 
             input_voice = (
-
                 "uploaded_voice.wav"
-
             )
 
 
             with open(
-
                 input_voice,
-
                 "wb"
-
             ) as f:
 
                 f.write(
-
                     voice_file.getbuffer()
-
                 )
 
 
-            st.info(
-
-                "🎵 आपकी आवाज़ process हो रही है..."
-
-            )
+            with st.spinner(
+                "🎵 आपकी आवाज़ को enhance और music के साथ mix किया जा रहा है..."
+            ):
 
 
-            # Generate
+                processed_voice, final_audio = (
+                    create_poetry_audio(
 
-            processed_voice, final_audio = (
+                        voice_file=input_voice,
 
-                create_poetry_audio(
+                        music_name=music_name,
 
-                    voice_file=input_voice,
+                        mood=mood,
 
-                    music_name=music_name,
+                        preset=preset,
 
-                    mood=mood,
+                        pitch=pitch,
 
-                    voice_tone=voice_tone,
+                        speed=speed,
 
-                    pitch=pitch,
+                        bass=bass,
 
-                    speed=speed,
+                        treble=treble,
 
-                    bass=bass,
+                        reverb=reverb,
 
-                    treble=treble,
+                        music_volume=music_volume
 
-                    reverb=reverb
-
+                    )
                 )
-
-            )
 
 
             st.success(
-
-                "✅ Poetry Remix Successfully Generated!"
-
+                "✅ Professional Poetry Audio Generated!"
             )
 
 
@@ -351,23 +262,19 @@ if st.button(
             # =================================================
 
             st.write(
-
                 "### 📄 Processing Details"
-
             )
 
 
             st.write(
-
                 f"""
-
 😊 Mood: {mood}
 
-🎙️ Voice Tone: {voice_tone}
+🎙️ Preset: {preset}
 
 🎚️ Pitch: {pitch}
 
-🐢 Speed: {speed}x
+⏩ Speed: {speed}x
 
 🔊 Bass: {bass}
 
@@ -377,8 +284,10 @@ if st.button(
 
 🎵 Background Music: {music_name}
 
-"""
+🎵 Music Volume: {music_volume} dB
 
+🎧 Processing: Voice Enhancement + Compression + Automatic Music Mixing
+"""
             )
 
 
@@ -387,16 +296,12 @@ if st.button(
             # =================================================
 
             st.write(
-
-                "### 🎙️ Processed Voice"
-
+                "### 🎙️ Enhanced Voice"
             )
 
 
             st.audio(
-
                 processed_voice
-
             )
 
 
@@ -405,16 +310,12 @@ if st.button(
             # =================================================
 
             st.write(
-
                 "### 🎧 Final Poetry With Music"
-
             )
 
 
             st.audio(
-
                 final_audio
-
             )
 
 
@@ -423,13 +324,9 @@ if st.button(
             # =================================================
 
             with open(
-
                 final_audio,
-
                 "rb"
-
             ) as f:
-
 
                 st.download_button(
 
@@ -438,9 +335,7 @@ if st.button(
                     data=f,
 
                     file_name=(
-
-                        "MySunoAI_Poetry_Remix.mp3"
-
+                        "MySunoAI_Professional_Poetry.mp3"
                     ),
 
                     mime="audio/mpeg"
@@ -450,9 +345,6 @@ if st.button(
 
         except Exception as e:
 
-
             st.error(
-
                 f"❌ ERROR: {str(e)}"
-
             )
