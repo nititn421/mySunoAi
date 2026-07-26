@@ -1,10 +1,7 @@
 from pathlib import Path
 
 from pydub import AudioSegment
-from pydub.effects import (
-    normalize,
-    compress_dynamic_range
-)
+from pydub.effects import normalize, compress_dynamic_range
 
 
 # =========================================================
@@ -19,7 +16,7 @@ MUSIC_DIR.mkdir(exist_ok=True)
 
 
 # =========================================================
-# MUSIC
+# MUSIC FILES
 # =========================================================
 
 MUSIC_FILES = [
@@ -48,7 +45,7 @@ def select_music(music_name):
 
 
 # =========================================================
-# SPEED
+# CHANGE SPEED
 # =========================================================
 
 def change_speed(audio, speed):
@@ -73,7 +70,7 @@ def change_speed(audio, speed):
 
 
 # =========================================================
-# PITCH
+# CHANGE PITCH
 # =========================================================
 
 def change_pitch(audio, pitch):
@@ -102,7 +99,7 @@ def change_pitch(audio, pitch):
 
 
 # =========================================================
-# REVERB
+# ADD REVERB
 # =========================================================
 
 def add_reverb(audio, amount):
@@ -143,61 +140,39 @@ def enhance_voice(
     reverb
 ):
 
-    # =====================================================
     # MONO
-    # =====================================================
-
     voice = voice.set_channels(1)
 
-
-    # =====================================================
-    # NOISE REDUCTION - BASIC
-    # =====================================================
-
-    # Remove very low rumble
-    voice = voice.high_pass_filter(
-        70
-    )
+    # REMOVE LOW RUMBLE
+    voice = voice.high_pass_filter(70)
 
 
     # =====================================================
-    # PRESET
+    # PRESETS
     # =====================================================
 
     if preset == "Natural":
 
-        voice = voice.apply_gain(
-            0
-        )
+        voice = voice.apply_gain(0)
 
 
     elif preset == "Warm":
 
-        voice = voice.low_pass_filter(
-            9000
-        )
+        voice = voice.low_pass_filter(9000)
 
-        voice = voice.apply_gain(
-            1
-        )
+        voice = voice.apply_gain(1)
 
 
     elif preset == "Deep":
 
-        voice = voice.low_pass_filter(
-            7500
-        )
+        voice = voice.low_pass_filter(7500)
 
-        voice = voice.apply_gain(
-            1
-        )
+        voice = voice.apply_gain(1)
 
 
     elif preset == "Studio":
 
-        voice = voice.high_pass_filter(
-            80
-        )
+        voice = voice.high_pass_filter(80)
 
         voice = compress_dynamic_range(
             voice,
@@ -207,16 +182,12 @@ def enhance_voice(
             release=100
         )
 
-        voice = voice.apply_gain(
-            1
-        )
+        voice = voice.apply_gain(1)
 
 
     elif preset == "Cinematic":
 
-        voice = voice.high_pass_filter(
-            70
-        )
+        voice = voice.high_pass_filter(70)
 
         voice = compress_dynamic_range(
             voice,
@@ -226,9 +197,7 @@ def enhance_voice(
             release=120
         )
 
-        voice = voice.apply_gain(
-            1
-        )
+        voice = voice.apply_gain(1)
 
 
     # =====================================================
@@ -237,13 +206,9 @@ def enhance_voice(
 
     if bass != 0:
 
-        bass_layer = voice.low_pass_filter(
-            250
-        )
+        bass_layer = voice.low_pass_filter(250)
 
-        bass_layer = bass_layer.apply_gain(
-            bass
-        )
+        bass_layer = bass_layer.apply_gain(bass)
 
         voice = voice.overlay(
             bass_layer
@@ -256,13 +221,9 @@ def enhance_voice(
 
     if treble != 0:
 
-        treble_layer = voice.high_pass_filter(
-            3000
-        )
+        treble_layer = voice.high_pass_filter(3000)
 
-        treble_layer = treble_layer.apply_gain(
-            treble
-        )
+        treble_layer = treble_layer.apply_gain(treble)
 
         voice = voice.overlay(
             treble_layer
@@ -351,10 +312,14 @@ def process_voice(
     )
 
 
+    # LOAD VOICE
+
     voice = AudioSegment.from_file(
         voice_file
     )
 
+
+    # ENHANCE VOICE
 
     voice = enhance_voice(
         voice=voice,
@@ -366,6 +331,8 @@ def process_voice(
         reverb=reverb
     )
 
+
+    # SAVE PROCESSED VOICE
 
     processed_path = (
         OUTPUT_DIR /
@@ -391,7 +358,7 @@ def process_voice(
 
 
 # =========================================================
-# MUSIC LOOP
+# LOOP MUSIC
 # =========================================================
 
 def loop_music(
@@ -411,9 +378,7 @@ def loop_music(
         music += music
 
 
-    return music[
-        :duration
-    ]
+    return music[:duration]
 
 
 # =========================================================
@@ -431,12 +396,15 @@ def automatic_mix(
     )
 
 
+    # LOAD MUSIC
+
     music = AudioSegment.from_file(
         music_path
     )
 
 
-    # Stereo
+    # MAKE SAME CHANNELS
+
     music = music.set_channels(2)
 
     voice = voice.set_channels(2)
@@ -447,6 +415,7 @@ def automatic_mix(
     # =====================================================
 
     intro_duration = 3000
+
     outro_duration = 4000
 
 
@@ -456,6 +425,8 @@ def automatic_mix(
         + outro_duration
     )
 
+
+    # LOOP MUSIC
 
     music = loop_music(
         music,
@@ -467,21 +438,13 @@ def automatic_mix(
     # INTRO
     # =====================================================
 
-    intro = music[
-        :intro_duration
-    ]
+    intro = music[:intro_duration]
 
-    intro = intro.apply_gain(
-        -22
-    )
+    intro = intro.apply_gain(-22)
 
-    intro = intro.fade_in(
-        1500
-    )
+    intro = intro.fade_in(1500)
 
-    intro = intro.fade_out(
-        700
-    )
+    intro = intro.fade_out(700)
 
 
     # =====================================================
@@ -494,13 +457,11 @@ def automatic_mix(
     ]
 
 
-    # Music under voice
     main_music = main_music.apply_gain(
         music_volume
     )
 
 
-    # Smooth music start
     main_music = main_music.fade_in(
         800
     )
@@ -531,15 +492,9 @@ def automatic_mix(
     ]
 
 
-    outro = outro.apply_gain(
-        -22
-    )
+    outro = outro.apply_gain(-22)
 
-
-    outro = outro.fade_in(
-        500
-    )
-
+    outro = outro.fade_in(500)
 
     outro = outro.fade_out(
         outro_duration
@@ -547,7 +502,7 @@ def automatic_mix(
 
 
     # =====================================================
-    # FINAL
+    # FINAL AUDIO
     # =====================================================
 
     final_audio = (
@@ -594,20 +549,88 @@ def create_poetry_audio(
 
 
     # =====================================================
-    # VOICE
+    # STEP 1 - PROCESS VOICE
     # =====================================================
 
     voice, processed_path = process_voice(
+
         voice_file=voice_file,
+
         preset=preset,
+
         pitch=pitch,
+
         speed=speed,
+
         bass=bass,
+
         treble=treble,
+
         reverb=reverb
+
     )
 
 
     # =====================================================
-    # MUSIC
+    # STEP 2 - SELECT MUSIC
     # =====================================================
+
+    music_path = select_music(
+        music_name
+    )
+
+
+    # =====================================================
+    # STEP 3 - MIX VOICE + MUSIC
+    # =====================================================
+
+    final_audio = automatic_mix(
+
+        voice=voice,
+
+        music_path=music_path,
+
+        music_volume=music_volume
+
+    )
+
+
+    # =====================================================
+    # STEP 4 - SAVE FINAL AUDIO
+    # =====================================================
+
+    final_path = (
+        OUTPUT_DIR /
+        "final_output.mp3"
+    )
+
+
+    final_audio.export(
+
+        final_path,
+
+        format="mp3",
+
+        bitrate="192k"
+
+    )
+
+
+    print(
+        "🎧 Final Poetry Audio Generated"
+    )
+
+
+    print(
+        f"📁 Saved: {final_path}"
+    )
+
+
+    # =====================================================
+    # IMPORTANT RETURN
+    # =====================================================
+
+    return (
+        str(processed_path),
+        str(final_path)
+    )
