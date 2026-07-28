@@ -18,9 +18,7 @@ st.set_page_config(
 # TITLE
 # =========================================================
 
-st.title(
-    "🎵 MySunoAI Poetry Studio"
-)
+st.title("🎵 MySunoAI Poetry Studio")
 
 st.markdown(
     "### ✍️ अपनी कविता लिखिए और उसे Hindi AI Voice में सुनिए"
@@ -28,21 +26,17 @@ st.markdown(
 
 
 # =========================================================
-# POETRY INPUT
+# POETRY
 # =========================================================
 
 lyrics = st.text_area(
-
     "✍️ अपनी कविता लिखें",
-
     placeholder=(
         "यहाँ अपनी कविता लिखें...\n\n"
         "उदाहरण:\n"
         "वह चाँद के बगल का तारा ऐसे मुस्कुराता है..."
     ),
-
     height=250
-
 )
 
 
@@ -51,9 +45,7 @@ lyrics = st.text_area(
 # =========================================================
 
 mood = st.selectbox(
-
     "😊 Poetry Mood",
-
     [
         "Emotional",
         "Sad",
@@ -63,7 +55,6 @@ mood = st.selectbox(
         "Motivational",
         "Spiritual"
     ]
-
 )
 
 
@@ -72,9 +63,7 @@ mood = st.selectbox(
 # =========================================================
 
 voice_style = st.selectbox(
-
     "🎙️ Voice Style",
-
     [
         "Natural",
         "Soft",
@@ -82,7 +71,6 @@ voice_style = st.selectbox(
         "Warm",
         "Clear"
     ]
-
 )
 
 
@@ -91,17 +79,11 @@ voice_style = st.selectbox(
 # =========================================================
 
 pitch = st.slider(
-
     "🎚️ Voice Pitch",
-
     -5,
-
     5,
-
     0,
-
     1
-
 )
 
 
@@ -110,17 +92,11 @@ pitch = st.slider(
 # =========================================================
 
 speed = st.slider(
-
     "⏩ Voice Speed",
-
     0.7,
-
     1.3,
-
     1.0,
-
     0.05
-
 )
 
 
@@ -129,17 +105,11 @@ speed = st.slider(
 # =========================================================
 
 bass = st.slider(
-
     "🔊 Bass",
-
     -5,
-
     8,
-
     0,
-
     1
-
 )
 
 
@@ -148,17 +118,11 @@ bass = st.slider(
 # =========================================================
 
 treble = st.slider(
-
     "✨ Voice Clarity / Treble",
-
     -5,
-
     8,
-
     0,
-
     1
-
 )
 
 
@@ -167,17 +131,11 @@ treble = st.slider(
 # =========================================================
 
 reverb = st.slider(
-
     "🌊 Reverb",
-
     0,
-
     30,
-
     0,
-
     1
-
 )
 
 
@@ -186,20 +144,14 @@ reverb = st.slider(
 # =========================================================
 
 music_choices = [
-
     f"background{i}.mp3"
-
     for i in range(1, 13)
-
 ]
 
 
 music_name = st.selectbox(
-
     "🎵 Background Music",
-
     music_choices
-
 )
 
 
@@ -208,17 +160,11 @@ music_name = st.selectbox(
 # =========================================================
 
 music_volume = st.slider(
-
     "🎵 Background Music Volume",
-
     -35,
-
     -15,
-
     -28,
-
     1
-
 )
 
 
@@ -226,21 +172,10 @@ music_volume = st.slider(
 # GENERATE BUTTON
 # =========================================================
 
-generate = st.button(
-
+if st.button(
     "🎵 Generate Poetry Audio",
-
     type="primary"
-
-)
-
-
-# =========================================================
-# GENERATE PROCESS
-# =========================================================
-
-if generate:
-
+):
 
     # =====================================================
     # CHECK POETRY
@@ -249,9 +184,7 @@ if generate:
     if not lyrics.strip():
 
         st.error(
-
             "❌ पहले अपनी कविता लिखिए।"
-
         )
 
         st.stop()
@@ -263,35 +196,27 @@ if generate:
 
     try:
 
-
         with st.spinner(
-
             "🎙️ आपकी कविता को Hindi AI Voice में बदला जा रहा है..."
-
         ):
 
+            processed_voice, final_audio = create_poetry_audio(
 
-            processed_voice, final_audio = (
+                lyrics=lyrics,
 
-                create_poetry_audio(
+                music_name=music_name,
 
-                    lyrics=lyrics,
+                pitch=pitch,
 
-                    music_name=music_name,
+                speed=speed,
 
-                    pitch=pitch,
+                bass=bass,
 
-                    speed=speed,
+                treble=treble,
 
-                    bass=bass,
+                reverb=reverb,
 
-                    treble=treble,
-
-                    reverb=reverb,
-
-                    music_volume=music_volume
-
-                )
+                music_volume=music_volume
 
             )
 
@@ -301,9 +226,7 @@ if generate:
         # =================================================
 
         st.success(
-
             "✅ आपकी Poetry Audio तैयार है!"
-
         )
 
 
@@ -312,7 +235,86 @@ if generate:
         # =================================================
 
         st.write(
-
             "### 📄 Processing Details"
+        )
 
+        st.write(
+            f"""
+😊 Mood: {mood}
+
+🎙️ Voice Style: {voice_style}
+
+🎚️ Pitch: {pitch}
+
+⏩ Speed: {speed}x
+
+🔊 Bass: {bass}
+
+✨ Treble: {treble}
+
+🌊 Reverb: {reverb}
+
+🎵 Background Music: {music_name}
+
+🎵 Music Volume: {music_volume} dB
+"""
+        )
+
+
+        # =================================================
+        # AI VOICE
+        # =================================================
+
+        st.write(
+            "### 🎙️ Hindi AI Voice"
+        )
+
+        st.audio(
+            processed_voice
+        )
+
+
+        # =================================================
+        # FINAL AUDIO
+        # =================================================
+
+        st.write(
+            "### 🎧 Final Poetry With Music"
+        )
+
+        st.audio(
+            final_audio
+        )
+
+
+        # =================================================
+        # DOWNLOAD
+        # =================================================
+
+        with open(
+            final_audio,
+            "rb"
+        ) as f:
+
+            st.download_button(
+
+                label="⬇️ Download Final Poetry",
+
+                data=f,
+
+                file_name="MySunoAI_Poetry.mp3",
+
+                mime="audio/mpeg"
+
+            )
+
+
+    except Exception as e:
+
+        st.error(
+            "❌ Audio Generation Error"
+        )
+
+        st.code(
+            str(e)
         )
