@@ -26,7 +26,7 @@ st.markdown(
 
 
 # =========================================================
-# POETRY
+# POETRY INPUT
 # =========================================================
 
 lyrics = st.text_area(
@@ -54,7 +54,8 @@ mood = st.selectbox(
         "Calm",
         "Motivational",
         "Spiritual"
-    ]
+    ],
+    index=0
 )
 
 
@@ -70,7 +71,8 @@ voice_style = st.selectbox(
         "Deep",
         "Warm",
         "Clear"
-    ]
+    ],
+    index=0
 )
 
 
@@ -80,10 +82,10 @@ voice_style = st.selectbox(
 
 pitch = st.slider(
     "🎚️ Voice Pitch",
-    -5,
-    5,
-    0,
-    1
+    min_value=-5,
+    max_value=5,
+    value=0,
+    step=1
 )
 
 
@@ -93,10 +95,10 @@ pitch = st.slider(
 
 speed = st.slider(
     "⏩ Voice Speed",
-    0.7,
-    1.3,
-    1.0,
-    0.05
+    min_value=0.7,
+    max_value=1.3,
+    value=1.0,
+    step=0.05
 )
 
 
@@ -106,10 +108,10 @@ speed = st.slider(
 
 bass = st.slider(
     "🔊 Bass",
-    -5,
-    8,
-    0,
-    1
+    min_value=-5,
+    max_value=8,
+    value=0,
+    step=1
 )
 
 
@@ -119,10 +121,10 @@ bass = st.slider(
 
 treble = st.slider(
     "✨ Voice Clarity / Treble",
-    -5,
-    8,
-    0,
-    1
+    min_value=-5,
+    max_value=8,
+    value=0,
+    step=1
 )
 
 
@@ -132,15 +134,15 @@ treble = st.slider(
 
 reverb = st.slider(
     "🌊 Reverb",
-    0,
-    30,
-    0,
-    1
+    min_value=0,
+    max_value=30,
+    value=0,
+    step=1
 )
 
 
 # =========================================================
-# MUSIC
+# BACKGROUND MUSIC
 # =========================================================
 
 music_choices = [
@@ -151,7 +153,8 @@ music_choices = [
 
 music_name = st.selectbox(
     "🎵 Background Music",
-    music_choices
+    music_choices,
+    index=0
 )
 
 
@@ -161,10 +164,10 @@ music_name = st.selectbox(
 
 music_volume = st.slider(
     "🎵 Background Music Volume",
-    -35,
-    -15,
-    -28,
-    1
+    min_value=-35,
+    max_value=-15,
+    value=-28,
+    step=1
 )
 
 
@@ -172,14 +175,22 @@ music_volume = st.slider(
 # GENERATE BUTTON
 # =========================================================
 
-if st.button(
+generate_button = st.button(
     "🎵 Generate Poetry Audio",
-    type="primary"
-):
+    type="primary",
+    use_container_width=True
+)
 
-    # =====================================================
+
+# =========================================================
+# GENERATE AUDIO
+# =========================================================
+
+if generate_button:
+
+    # -----------------------------------------------------
     # CHECK POETRY
-    # =====================================================
+    # -----------------------------------------------------
 
     if not lyrics.strip():
 
@@ -190,9 +201,9 @@ if st.button(
         st.stop()
 
 
-    # =====================================================
+    # -----------------------------------------------------
     # PROCESS
-    # =====================================================
+    # -----------------------------------------------------
 
     try:
 
@@ -200,47 +211,53 @@ if st.button(
             "🎙️ आपकी कविता को Hindi AI Voice में बदला जा रहा है..."
         ):
 
-            processed_voice, final_audio = create_poetry_audio(
+            processed_voice, final_audio = (
+                create_poetry_audio(
 
-                lyrics=lyrics,
+                    lyrics=lyrics,
 
-                music_name=music_name,
+                    music_name=music_name,
 
-                pitch=pitch,
+                    mood=mood,
 
-                speed=speed,
+                    voice_style=voice_style,
 
-                bass=bass,
+                    pitch=pitch,
 
-                treble=treble,
+                    speed=speed,
 
-                reverb=reverb,
+                    bass=bass,
 
-                music_volume=music_volume
+                    treble=treble,
 
+                    reverb=reverb,
+
+                    music_volume=music_volume
+
+                )
             )
 
 
-        # =================================================
+        # -------------------------------------------------
         # SUCCESS
-        # =================================================
+        # -------------------------------------------------
 
         st.success(
             "✅ आपकी Poetry Audio तैयार है!"
         )
 
 
-        # =================================================
+        # -------------------------------------------------
         # DETAILS
-        # =================================================
+        # -------------------------------------------------
 
         st.write(
             "### 📄 Processing Details"
         )
 
-        st.write(
+        st.info(
             f"""
-😊 Mood: {mood}
+😊 Poetry Mood: {mood}
 
 🎙️ Voice Style: {voice_style}
 
@@ -261,53 +278,61 @@ if st.button(
         )
 
 
-        # =================================================
+        # -------------------------------------------------
         # AI VOICE
-        # =================================================
+        # -------------------------------------------------
 
         st.write(
             "### 🎙️ Hindi AI Voice"
         )
 
         st.audio(
-            processed_voice
+            processed_voice,
+            format="audio/mp3"
         )
 
 
-        # =================================================
+        # -------------------------------------------------
         # FINAL AUDIO
-        # =================================================
+        # -------------------------------------------------
 
         st.write(
             "### 🎧 Final Poetry With Music"
         )
 
         st.audio(
-            final_audio
+            final_audio,
+            format="audio/mp3"
         )
 
 
-        # =================================================
+        # -------------------------------------------------
         # DOWNLOAD
-        # =================================================
+        # -------------------------------------------------
 
         with open(
             final_audio,
             "rb"
-        ) as f:
+        ) as audio_file:
 
             st.download_button(
 
                 label="⬇️ Download Final Poetry",
 
-                data=f,
+                data=audio_file,
 
                 file_name="MySunoAI_Poetry.mp3",
 
-                mime="audio/mpeg"
+                mime="audio/mpeg",
+
+                use_container_width=True
 
             )
 
+
+    # -----------------------------------------------------
+    # ERROR
+    # -----------------------------------------------------
 
     except Exception as e:
 
